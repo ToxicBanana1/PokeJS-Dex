@@ -1,23 +1,22 @@
 import axios from 'https://cdn.skypack.dev/axios';
-import FormData from 'https://cdn.skypack.dev/form-data';
+// import FormData from 'https://cdn.skypack.dev/form-data';
 
 const imgbbApiKey = '6dc7d936f370b8d27e65c997d13db262';
 const imagePath = 'search.png';
 const expiration = 60;
 
-async function uploadImage() {
-    try {
-        const form = new FormData();
-        form.append('image', fs.createReadStream(imagePath));
-        form.append('expiration', expiration);
+async function uploadImage(image) {
+    const form = new FormData();
+    form.append('image', image);
+    form.append('expiration', expiration);
 
+    try {
         const response = await axios.post(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, form, {
-            headers: form.getHeaders(),
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         if (response.data && response.data.data && response.data.data.url) {
-            console.log('Image URL:', response.data.data.url);
-            return response.data.data.url;
+            return `https://lens.google.com/uploadbyurl?url=${response.data.data.url}`;
         } else {
             throw new Error('Failed to upload image');
         }
@@ -29,12 +28,8 @@ async function uploadImage() {
 const video = document.createElement('video');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
-const captureButton = document.createElement('button');
-captureButton.innerText = 'Capture Image';
 
 document.body.appendChild(video);
-document.body.appendChild(captureButton);
-
 navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
         video.srcObject = stream;
@@ -44,27 +39,29 @@ navigator.mediaDevices.getUserMedia({ video: true })
         console.error('Error accessing webcam:', error);
     });
 
-captureButton.addEventListener('click', () => {
+// Set the video element to dynamically size to the screen
+video.style.width = '100%';
+video.style.height = '100%';
+video.style.objectFit = 'cover';
+
+video.addEventListener('click', async () => {
+    // Adjust canvas size to match video size
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
     canvas.toBlob(async (blob) => {
-        const form = new FormData();
-        form.append('image', blob);
-        form.append('expiration', expiration);
-
-        try {
-            const response = await axios.post(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, form, {
-                headers: form.getHeaders(),
-            });
-
-            if (response.data && response.data.data && response.data.data.url) {
-                console.log('Image URL:', response.data.data.url);
-            } else {
-                throw new Error('Failed to upload image');
-            }
-        } catch (error) {
-            console.error('Error uploading image:', error);
-        }
+        search(uploadImage(blob));
     }, 'image/png');
 });
+
+async function search(url) {
+    try {
+        const response = await axios.get(url);
+        const pageContents = response.data;
+        // Now you can search through pageContents
+        console.log(pageContents);
+    } catch (error) {
+        console.error('Error fetching the webpage:', error);
+    }
+}
