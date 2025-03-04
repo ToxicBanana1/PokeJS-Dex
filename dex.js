@@ -51,7 +51,8 @@ video.addEventListener('click', async () => {
 
     context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
     canvas.toBlob(async (blob) => {
-        search(uploadImage(blob));
+        const url = await uploadImage(blob);
+        search(url);
     }, 'image/png');
 });
 
