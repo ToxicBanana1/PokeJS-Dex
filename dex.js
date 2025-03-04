@@ -1,6 +1,5 @@
-const fs = require('fs');
-const axios = require('axios');
-const FormData = require('form-data');
+import axios from 'https://cdn.skypack.dev/axios';
+import FormData from 'https://cdn.skypack.dev/form-data';
 
 const imgbbApiKey = '6dc7d936f370b8d27e65c997d13db262';
 const imagePath = 'search.png';
